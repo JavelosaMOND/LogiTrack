@@ -13,9 +13,9 @@ use App\Http\Controllers\AuthController;
 // Home route - redirect to dashboard for authenticated users, or show welcome page
 Route::get('/', function () {
     if (auth()->check()) {
-        return redirect()->route('dashboard');
+        return redirect()->route('login');
     }
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // Authentication routes
