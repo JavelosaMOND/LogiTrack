@@ -36,6 +36,20 @@
                                 <td>{{ $report->created_at->format('Y-m-d H:i') }}</td>
                                 <td class="text-end">
                                     <a href="{{ route('reports.show', $report) }}" class="btn btn-sm btn-outline-primary">View</a>
+                                    @if($report->user_id === auth()->id())
+                                        @if($report->status === 'draft')
+                                            <form action="{{ route('reports.submit', $report) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button class="btn btn-sm btn-success">Submit</button>
+                                            </form>
+                                            <a href="{{ route('reports.edit', $report) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                        @elseif($report->status === 'pending')
+                                            <form action="{{ route('reports.undo', $report) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                <button class="btn btn-sm btn-warning">Undo Submit</button>
+                                            </form>
+                                        @endif
+                                    @endif
                                 </td>
                             </tr>
                         @empty

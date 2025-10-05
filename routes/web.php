@@ -32,6 +32,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Reports
     Route::resource('reports', ReportController::class);
+    Route::post('/reports/{report}/submit', [ReportController::class, 'submit'])->name('reports.submit');
+    Route::post('/reports/{report}/undo-submit', [ReportController::class, 'undoSubmit'])->name('reports.undo');
 
     // Approval workflow (Manager/Admin)
     Route::post('/reports/{report}/approve', [ReportController::class, 'approve'])->name('reports.approve');

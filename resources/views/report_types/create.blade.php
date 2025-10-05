@@ -12,22 +12,24 @@
             <form method="POST" action="{{ route('report-types.store') }}">
                 @csrf
                 <div class="mb-3">
-                    <label class="form-label">Name</label>
-                    <input type="text" name="name" class="form-control" value="{{ old('name') }}">
+                    <label class="form-label">Report Type</label>
+                    <select name="name" class="form-control">
+                        <option value="">-- Select report type --</option>
+                        @php($types = [
+                            'Daily Accomplishment',
+                            'Weekly Operations',
+                            'Monthly Financial',
+                            'Incident / Issue',
+                            'Project Progress',
+                            'Attendance / Time Log',
+                        ])
+                        @foreach($types as $t)
+                            <option value="{{ $t }}" {{ old('name') === $t ? 'selected' : '' }}>{{ $t }}</option>
+                        @endforeach
+                    </select>
                     @error('name')<div class="text-danger small">{{ $message }}</div>@enderror
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Purpose</label>
-                    <input type="text" name="purpose" class="form-control" value="{{ old('purpose') }}">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Frequency</label>
-                    <input type="text" name="frequency" class="form-control" value="{{ old('frequency') }}">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Sort Order</label>
-                    <input type="number" name="sort_order" class="form-control" value="{{ old('sort_order') }}">
-                </div>
+                
                 <div class="form-check form-switch mb-4">
                     <input class="form-check-input" type="checkbox" role="switch" id="active" name="active" {{ old('active', true) ? 'checked' : '' }}>
                     <label class="form-check-label" for="active">Active</label>

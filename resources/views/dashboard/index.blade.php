@@ -40,6 +40,7 @@
             <a class="navbar-brand fw-bold" href="#">LogiTrack</a>
             <div class="navbar-nav ms-auto">
                 @role('Admin')
+                    <a href="{{ route('report-types.index') }}" class="btn btn-outline-light btn-sm me-2">Report Types</a>
                     <a href="{{ route('users.index') }}" class="btn btn-outline-light btn-sm me-2">Manage Users</a>
                 @endrole
                 <span class="navbar-text me-3">Welcome, {{ Auth::user()->name }}!</span>
@@ -103,7 +104,11 @@
                 <div class="card">
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Recent Reports</h5>
-                        <a href="{{ route('reports.create') }}" class="btn btn-primary btn-sm">Create New Report</a>
+                        @role('Admin')
+                            <a href="{{ route('report-types.create') }}" class="btn btn-primary btn-sm">New Report Type</a>
+                        @else
+                            <a href="{{ route('reports.create') }}" class="btn btn-primary btn-sm">Create New Report</a>
+                        @endrole
                     </div>
                     <div class="card-body">
                         @if($reports->count() > 0)
@@ -139,7 +144,11 @@
                             </div>
                         @else
                             <div class="text-center py-4">
-                                <p class="text-muted">No reports found. <a href="{{ route('reports.create') }}">Create your first report</a></p>
+                                @role('Admin')
+                                    <p class="text-muted">No reports to display. <a href="{{ route('report-types.create') }}">Create a report type</a></p>
+                                @else
+                                    <p class="text-muted">No reports found. <a href="{{ route('reports.create') }}">Create your first report</a></p>
+                                @endrole
                             </div>
                         @endif
                     </div>

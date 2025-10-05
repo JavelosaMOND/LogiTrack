@@ -51,6 +51,15 @@
 </head>
 <body>
     <div class="container">
+        @if(session('success'))
+            <div class="alert alert-success mt-3">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger mt-3">{{ session('error') }}</div>
+        @endif
+        @if(session('info'))
+            <div class="alert alert-info mt-3">{{ session('info') }}</div>
+        @endif
         @yield('content')
     </div>
 

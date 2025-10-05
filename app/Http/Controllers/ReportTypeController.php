@@ -20,15 +20,35 @@ class ReportTypeController extends Controller
 
     public function store(Request $request)
     {
+        $allowedNames = [
+            'Daily Accomplishment',
+            'Weekly Operations',
+            'Monthly Financial',
+            'Incident / Issue',
+            'Project Progress',
+            'Attendance / Time Log',
+        ];
         $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'purpose' => 'nullable|string|max:255',
-            'frequency' => 'nullable|string|max:255',
+            'name' => 'required|string|in:' . implode(',', $allowedNames),
             'active' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0',
         ]);
         $data['active'] = $request->boolean('active', true);
-        ReportType::create($data);
+        // Set fixed purpose text based on type
+        $purposeByName = [
+            'Daily Accomplishment' => 'Track daily tasks & outputs',
+            'Weekly Operations' => 'Summarize weekly activities',
+            'Monthly Financial' => 'Track expenses & budget',
+            'Incident / Issue' => 'Record problems or accidents',
+            'Project Progress' => 'Monitor ongoing projects',
+            'Attendance / Time Log' => 'Verify employee attendance',
+        ];
+        $payload = [
+            'name' => $data['name'],
+            'purpose' => $purposeByName[$data['name']] ?? null,
+            'frequency' => null,
+            'active' => $data['active'],
+        ];
+        ReportType::updateOrCreate(['name' => $data['name']], $payload);
         return redirect()->route('report-types.index')->with('success', 'Report type created.');
     }
 
@@ -39,15 +59,34 @@ class ReportTypeController extends Controller
 
     public function update(Request $request, ReportType $reportType)
     {
+        $allowedNames = [
+            'Daily Accomplishment',
+            'Weekly Operations',
+            'Monthly Financial',
+            'Incident / Issue',
+            'Project Progress',
+            'Attendance / Time Log',
+        ];
         $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'purpose' => 'nullable|string|max:255',
-            'frequency' => 'nullable|string|max:255',
+            'name' => 'required|string|in:' . implode(',', $allowedNames),
             'active' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0',
         ]);
         $data['active'] = $request->boolean('active', true);
-        $reportType->update($data);
+        $purposeByName = [
+            'Daily Accomplishment' => 'Track daily tasks & outputs',
+            'Weekly Operations' => 'Summarize weekly activities',
+            'Monthly Financial' => 'Track expenses & budget',
+            'Incident / Issue' => 'Record problems or accidents',
+            'Project Progress' => 'Monitor ongoing projects',
+            'Attendance / Time Log' => 'Verify employee attendance',
+        ];
+        $payload = [
+            'name' => $data['name'],
+            'purpose' => $purposeByName[$data['name']] ?? null,
+            'frequency' => null,
+            'active' => $data['active'],
+        ];
+        $reportType->update($payload);
         return redirect()->route('report-types.index')->with('success', 'Report type updated.');
     }
 

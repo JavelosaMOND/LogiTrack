@@ -15,6 +15,11 @@ class ReportController extends Controller
 
     public function create()
     {
+        // Admins should create report types, not reports
+        if (auth()->user()?->hasRole('Admin')) {
+            return redirect()->route('report-types.create')
+                ->with('info', 'Admins manage report types. Create a report type here.');
+        }
         $reportTypes = \App\Models\ReportType::where('active', true)
             ->orderByRaw('COALESCE(sort_order, 9999)')
             ->orderBy('name')
@@ -25,9 +30,22 @@ class ReportController extends Controller
 
     public function store(Request $request)
     {
+        // Admins should not submit reports; redirect to report types
+        if (auth()->user()?->hasRole('Admin')) {
+            return redirect()->route('report-types.create')
+                ->with('info', 'Admins manage report types. Create a report type here.');
+        }
+
+        $allowedTypes = [
+            'Daily Accomplishment',
+            'Weekly Operations',
+            'Monthly Financial',
+            'Incident / Issue',
+            'Project Progress',
+            'Attendance / Time Log',
+        ];
         $request->validate([
-            'report_type_id' => 'required|exists:report_types,id',
-            'content' => 'required|string',
+            'type' => 'required|string|in:' . implode(',', $allowedTypes),
             'file' => 'nullable|file|mimes:pdf,xlsx,xls,jpeg,png|max:10240',
         ]);
 
@@ -35,17 +53,60 @@ class ReportController extends Controller
             ? $request->file('file')->store('reports', 'public')
             : null;
 
-        $reportType = \App\Models\ReportType::find($request->report_type_id);
+        $status = $request->input('action') === 'draft' ? 'draft' : 'pending';
+
+        // Map optional report_type_id by name if exists
+        $reportType = \App\Models\ReportType::where('name', $request->type)->first();
+
+        $structured = $this->extractStructuredContent($request);
 
         Report::create([
             'user_id' => auth()->id(),
-            'report_type_id' => $request->report_type_id,
-            'type' => $reportType?->name ?? '',
-            'content' => $request->content,
+            'report_type_id' => $reportType?->id,
+            'type' => $request->type,
+            'content' => json_encode($structured),
             'file_path' => $path,
+            'status' => $status,
         ]);
 
-        return redirect()->route('reports.index')->with('success', 'Report submitted successfully.');
+        return redirect()->route('reports.index')->with('success', $status === 'draft' ? 'Report saved as draft.' : 'Report submitted successfully.');
+    }
+
+    private function extractStructuredContent(Request $request): array
+    {
+        $type = $request->input('type');
+        switch ($type) {
+            case 'Daily Accomplishment':
+                return $request->input('daily', []);
+            case 'Weekly Operations':
+                return $request->input('weekly', []);
+            case 'Monthly Financial':
+                return $request->input('monthly', []);
+            case 'Incident / Issue':
+                return $request->input('incident', []);
+            case 'Project Progress':
+                return $request->input('project', []);
+            case 'Attendance / Time Log':
+                $att = $request->input('attendance', []);
+                $total = 0.0;
+                $pairs = [
+                    ['in' => $att['time_in_1'] ?? null, 'out' => $att['time_out_1'] ?? null],
+                    ['in' => $att['time_in_2'] ?? null, 'out' => $att['time_out_2'] ?? null],
+                ];
+                foreach ($pairs as $p) {
+                    if ($p['in'] && $p['out']) {
+                        $start = strtotime($att['date'] . ' ' . $p['in']);
+                        $end = strtotime($att['date'] . ' ' . $p['out']);
+                        if ($end > $start) {
+                            $total += ($end - $start) / 3600;
+                        }
+                    }
+                }
+                $att['total_hours'] = round($total, 2);
+                return $att;
+            default:
+                return [];
+        }
     }
 
     public function show(Report $report)
@@ -99,5 +160,29 @@ class ReportController extends Controller
     {
         $report->update(['status' => 'rejected']);
         return back()->with('error', 'Report rejected.');
+    }
+
+    public function submit(Report $report)
+    {
+        if ($report->user_id !== auth()->id()) {
+            abort(403);
+        }
+        if ($report->status !== 'draft') {
+            return back()->with('error', 'Only draft reports can be submitted.');
+        }
+        $report->update(['status' => 'pending']);
+        return back()->with('success', 'Report submitted.');
+    }
+
+    public function undoSubmit(Report $report)
+    {
+        if ($report->user_id !== auth()->id()) {
+            abort(403);
+        }
+        if ($report->status !== 'pending') {
+            return back()->with('error', 'Only pending reports can be undone.');
+        }
+        $report->update(['status' => 'draft']);
+        return back()->with('success', 'Submission undone. Report is back to draft.');
     }
 }

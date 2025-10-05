@@ -21,7 +21,7 @@
                             <th>Purpose</th>
                             <th>Frequency</th>
                             <th>Active</th>
-                            <th>Sort</th>
+                            
                             <th></th>
                         </tr>
                     </thead>
@@ -34,7 +34,7 @@
                                 <td>
                                     <span class="badge {{ $t->active ? 'bg-success' : 'bg-secondary' }}">{{ $t->active ? 'Yes' : 'No' }}</span>
                                 </td>
-                                <td>{{ $t->sort_order }}</td>
+                                
                                 <td class="text-end">
                                     <a href="{{ route('report-types.edit', $t) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                                     <form action="{{ route('report-types.destroy', $t) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this type?')">
