@@ -40,6 +40,9 @@ Route::middleware(['auth'])->group(function () {
     // Admin-only
     Route::middleware('role:Admin')->group(function () {
         Route::resource('users', UserController::class);
+        Route::resource('report-types', \App\Http\Controllers\ReportTypeController::class)->parameters([
+            'report-types' => 'reportType'
+        ]);
         Route::get('/audit-logs', [AuditLogController::class, 'index'])->name('audit.logs');
         Route::get('/storage-settings', [StorageController::class, 'index'])->name('storage.settings');
     });

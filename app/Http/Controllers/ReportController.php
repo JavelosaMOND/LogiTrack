@@ -9,19 +9,24 @@ class ReportController extends Controller
 {
     public function index()
     {
-        $reports = Report::with('user')->latest()->paginate(10);
+        $reports = Report::with(['user','reportType'])->latest()->paginate(10);
         return view('reports.index', compact('reports'));
     }
 
     public function create()
     {
-        return view('reports.create');
+        $reportTypes = \App\Models\ReportType::where('active', true)
+            ->orderByRaw('COALESCE(sort_order, 9999)')
+            ->orderBy('name')
+            ->get();
+
+        return view('reports.create', compact('reportTypes'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'type' => 'required|string|max:255',
+            'report_type_id' => 'required|exists:report_types,id',
             'content' => 'required|string',
             'file' => 'nullable|file|mimes:pdf,xlsx,xls,jpeg,png|max:10240',
         ]);
@@ -30,9 +35,12 @@ class ReportController extends Controller
             ? $request->file('file')->store('reports', 'public')
             : null;
 
+        $reportType = \App\Models\ReportType::find($request->report_type_id);
+
         Report::create([
             'user_id' => auth()->id(),
-            'type' => $request->type,
+            'report_type_id' => $request->report_type_id,
+            'type' => $reportType?->name ?? '',
             'content' => $request->content,
             'file_path' => $path,
         ]);
@@ -53,7 +61,7 @@ class ReportController extends Controller
     public function update(Request $request, Report $report)
     {
         $request->validate([
-            'type' => 'required|string|max:255',
+            'report_type_id' => 'required|exists:report_types,id',
             'content' => 'required|string',
         ]);
 
@@ -62,8 +70,11 @@ class ReportController extends Controller
             $path = $request->file('file')->store('reports', 'public');
         }
 
+        $reportType = \App\Models\ReportType::find($request->report_type_id);
+
         $report->update([
-            'type' => $request->type,
+            'report_type_id' => $request->report_type_id,
+            'type' => $reportType?->name ?? $report->type,
             'content' => $request->content,
             'file_path' => $path,
         ]);

@@ -24,6 +24,7 @@ class Report extends Model
     protected $fillable = [
         'user_id',
         'type',
+        'report_type_id',
         'content',
         'file_path',
         'status',
@@ -32,5 +33,10 @@ class Report extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reportType()
+    {
+        return $this->belongsTo(ReportType::class);
     }
 }
